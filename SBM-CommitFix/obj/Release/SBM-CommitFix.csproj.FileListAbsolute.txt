@@ -1,0 +1,14 @@
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\SBM-CommitFix.exe.config
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\SBM-CommitFix.exe
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\SBM-CommitFix.pdb
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\CommandLine.dll
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\linq2db.dll
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\System.Console.dll
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\System.Reflection.TypeExtensions.dll
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\CommandLine.xml
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\linq2db.pdb
+c:\repos\SBM-CommitFix\SBM-CommitFix\bin\Release\linq2db.xml
+c:\repos\SBM-CommitFix\SBM-CommitFix\obj\Release\SBM-CommitFix.csprojResolveAssemblyReference.cache
+c:\repos\SBM-CommitFix\SBM-CommitFix\obj\Release\SBM-CommitFix.csproj.CoreCompileInputs.cache
+c:\repos\SBM-CommitFix\SBM-CommitFix\obj\Release\SBM-CommitFix.exe
+c:\repos\SBM-CommitFix\SBM-CommitFix\obj\Release\SBM-CommitFix.pdb
