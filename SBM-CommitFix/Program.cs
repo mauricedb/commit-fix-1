@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using CommandLine;
 using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.Mapping;
+using Newtonsoft.Json.Linq;
 
 namespace SBM_CommitFix
 {
     class Program
     {
+        const int MaxLength = 50;
+
         static void Main(string[] args)
         {
             Parser.Default.ParseArguments<Options>(args).WithParsed(options =>
@@ -17,53 +20,91 @@ namespace SBM_CommitFix
                 {
                     var count = db.Commits.Count();
                     Console.WriteLine($"There are {count:N0} commits in the {options.Database} database.");
-                }
 
+                    int updateCount = 0;
+
+                    var commits = GetCommitsToCheck(options);
+                    foreach (var commit in commits)
+                    {
+                        updateCount = HandleCommit(commit, options, updateCount, db);
+                    }
+
+                    Console.WriteLine($"Updated {updateCount} commits.");
+                }
             });
         }
-    }
 
+        private static int HandleCommit(Commit commit, Options options, int updateCount, VisionSuiteDB db)
+        {
+            var payload = commit.Payload
+                .Decompress()
+                .AsString()
+                .AsJArray();
 
-    public class Options
-    {
-        [Option('d', "database", HelpText = "Use database name", Required = true)]
-        public string Database { get; set; }
+            foreach (var @event in payload)
+            {
+                updateCount = HandleEvent(commit, options, updateCount, db, @event, payload);
+            }
+            return updateCount;
+        }
 
-        [Option('S', "server", HelpText = "Use server", Default = ".")]
-        public string Server { get; set; }
+        private static int HandleEvent(Commit commit, Options options, int updateCount, VisionSuiteDB db, JToken @event,
+            JArray payload)
+        {
+            var eventType = @event.EventType();
 
-        [Option("verbose", HelpText = "Verbose output", Default = false)]
-        public bool Verbose { get; set; }
+            if (eventType.IndexOf("SpecifyPieceOfEquipmentTypeEvent", StringComparison.InvariantCulture) != -1)
+            {
+                var pieceOfEquipmentCode = @event.Body()["PieceOfEquipmentCode"].ToString();
+                var equipmentType = @event.Body()["Type"].ToString();
 
-        [Option("what-if", HelpText = "Report what would happen but don't actually do it", Default = false)]
-        public bool WhatIf { get; set; }
+                if (equipmentType.Length > MaxLength)
+                {
+                    updateCount = TruncateEquipmentType(commit, options, updateCount, db, @event, payload, equipmentType, pieceOfEquipmentCode);
+                }
+            }
+            return updateCount;
+        }
 
-        internal Guid[] SitesToKeep;
-    }
+        private static int TruncateEquipmentType(Commit commit, Options options, int updateCount, VisionSuiteDB db,
+            JToken @event, JArray payload, string equipmentType, string pieceOfEquipmentCode)
+        {
+            Console.WriteLine($"Truncating '{equipmentType}' for equipment '{pieceOfEquipmentCode}'");
 
-    public class VisionSuiteDB : DataConnection
-    {
-        public VisionSuiteDB(Options options) : base("SqlServer", $"Server={options.Server};Database={options.Database};Trusted_Connection=True;Enlist=False;") { }
+            @event.Body()["Type"] = equipmentType.Substring(0, MaxLength);
 
-        public ITable<Commit> Commits { get { return GetTable<Commit>(); } }
-    }
+            var newPayload = payload
+                .ToString()
+                .AsBytes()
+                .Compress();
 
-    [Table(Schema = "Foundation", Name = "Commits")]
-    public class Commit
-    {
-        [PrimaryKey, Identity]
-        public int CheckpointNumber { get; set; }
+            Expression<Func<Commit, bool>> updatePredicate = c => c.CheckpointNumber == commit.CheckpointNumber;
 
-        [Column, DataType(DataType.VarBinary)]
-        public byte[] Payload { get; set; }
+            if (options.WhatIf)
+            {
+                updateCount += db.Commits
+                    .Count(updatePredicate);
+            }
+            else
+            {
+                updateCount += db.Commits
+                    .Where(updatePredicate)
+                    .Set(c => c.Payload, newPayload)
+                    .Update();
+            }
+            return updateCount;
+        }
 
-        [Column]
-        public Guid StreamIdOriginal { get; set; }
-
-        [Column]
-        public Guid? Site { get; set; }
-
-        [Column]
-        public int CommitSequence { get; set; }
+        private static List<Commit> GetCommitsToCheck(Options options)
+        {
+            using (var db = new VisionSuiteDB(options))
+            {
+                var commits =
+                    db.Commits
+                        .OrderBy(c => c.CheckpointNumber)
+                        .ToList();
+                return commits;
+            }
+        }
     }
 }

@@ -12,3 +12,5 @@ c:\repos\SBM-CommitFix\SBM-CommitFix\obj\Release\SBM-CommitFix.csprojResolveAsse
 c:\repos\SBM-CommitFix\SBM-CommitFix\obj\Release\SBM-CommitFix.csproj.CoreCompileInputs.cache
 c:\repos\SBM-CommitFix\SBM-CommitFix\obj\Release\SBM-CommitFix.exe
 c:\repos\SBM-CommitFix\SBM-CommitFix\obj\Release\SBM-CommitFix.pdb
+C:\Repos\SBM-CommitFix\SBM-CommitFix\bin\Release\Newtonsoft.Json.dll
+C:\Repos\SBM-CommitFix\SBM-CommitFix\bin\Release\Newtonsoft.Json.xml
